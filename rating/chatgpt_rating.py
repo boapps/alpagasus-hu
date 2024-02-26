@@ -50,9 +50,9 @@ def parse_score(review):
         score = float(review.split('\n')[0])
     except Exception as e:
         if('score:' in review):
-            score = float(review.split('score:')[1].split('\n')[0])
+            score = float(review.split('pont:')[1].split('\n')[0])
         elif('Score:' in review):
-            score = float(review.split('Score:')[1].strip('\n')[0])
+            score = float(review.split('Pont:')[1].strip('\n')[0])
         else:           
             logger.error(
                 f"{e}\nContent: {review}\n" "You must manually fix the score pair."
@@ -83,14 +83,15 @@ if __name__ == "__main__":
     parser.add_argument(
         "--batch_size",
         type=int,
-        default=5,
+        default=1,
         help="the batch size to call the ChatGPT."
     )
     args = parser.parse_args()
     message_list = []
     # alpaca_data_cleaned_archive = json.load(open("./alpaca_data_cleaned_archive.json"))
     alpaca_data = json.load(open("./alpaca_data.json"))
-    system_prompt = "We would like to request your feedback on the performance of AI assistant in response to the instruction and the given input displayed following."
+    # system_prompt = "We would like to request your feedback on the performance of AI assistant in response to the instruction and the given input displayed following."
+    system_prompt = "Szeretnénk a segítségedet kérni, egy MI asszisztensel kapcsolatban, amely egy utasításra ad választ."
 
 
     '''
@@ -101,11 +102,12 @@ if __name__ == "__main__":
     '''
     rating according to the accuracy
     '''
-    user_prompt = "Please rate according to the accuracy of the response to the instruction and the input. Each assistant receives a score on a scale of 0 to 5, where a higher score indicates higher level of the accuracy. Please first output a single line containing value indicating the scores. In the subsequent line, please provide a comprehensive explanation of your evaluation, avoiding any potential bias. \n\n"
+    # user_prompt = "Please rate according to the accuracy of the response to the instruction and the input. Each assistant receives a score on a scale of 0 to 5, where a higher score indicates higher level of the accuracy. Please first output a single line containing value indicating the scores. In the subsequent line, please provide a comprehensive explanation of your evaluation, avoiding any potential bias. \n\n"
+    user_prompt = "Kérlek értékeld a bemenetre adott választ pontosság szerint. Minden asszisztens kap egy pontszámot 0 és 5 között, ahol a magasabb pontszám magasabb pontosságot jelent. Kérlek előbb írj egy bekezdést, melyben szövegesen értékeled a megoldást. Ezt követően új sorban add meg a pontszámot. \n\n"
     print(f"Alpaca data pairs: {len(alpaca_data)}")
     for i in range(len(alpaca_data)):
         # import pdb; pdb.set_trace()
-        triplet = "###Instruction:\n{instruction}\n\n### Input:\n{input}\n\n### Response:\n{output}\n\n".format_map(alpaca_data[i])
+        triplet = "###Utasítás:\n{instruction}\n\n### Válasz:\n{output}\n\n".format_map(alpaca_data[i])
         eval_prompt = triplet + user_prompt
         message =[
                     {"role": "system", "content": system_prompt},
@@ -148,7 +150,8 @@ if __name__ == "__main__":
     for idx, prediction in tqdm(enumerate(predictions)):
         review = prediction['choices'][0]['message']['content']
         # score = parse_score(review)
-        triplet = "###Instruction:\n{instruction}\n\n### Input:\n{input}\n\n### Response:\n{output}\n\n".format_map(alpaca_data[idx])
+        triplet = "###Utasítás:\n{instruction}\n\n### Válasz:\n{output}\n\n".format_map(alpaca_data[idx])
+        #triplet = "###Instruction:\n{instruction}\n\n### Input:\n{input}\n\n### Response:\n{output}\n\n".format_map(alpaca_data[idx])
         meta_output = {
                     "triplet":triplet,
                     "review":review
